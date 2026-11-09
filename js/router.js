@@ -6,7 +6,9 @@ import { esc } from './utilities/dom.js';
 const BUILT = {
   dashboard: () => import('./modules/dashboard.js'),
   institutions: () => import('./modules/institutions.js'),
-  users: () => import('./modules/users.js')
+  users: () => import('./modules/users.js'),
+  questionBuilder: () => import('./modules/question-builder.js'),
+  questionBank: () => import('./modules/question-bank.js')
 };
 let current = null, seq = 0;
 
@@ -20,7 +22,8 @@ export function buildNav() {
 
 export async function render() {
   const mods = getConfig().modules;
-  const mod = mods.find(m => m.id === location.hash.slice(2)) || mods[0];
+  const [id, param] = location.hash.slice(2).split('/'); // #/module or #/module/param
+  const mod = mods.find(m => m.id === id) || mods[0];
   const view = document.getElementById('view'), mine = ++seq;
   document.getElementById('pageTitle').textContent = t('nav.' + mod.id);
   document.querySelectorAll('[data-route]').forEach(a => a.dataset.route === mod.id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
@@ -35,7 +38,7 @@ export async function render() {
   try {
     const m = await BUILT[mod.id]();
     if (mine !== seq) return; // user navigated away while this loaded
-    current = m; await m.mount(view);
+    current = m; await m.mount(view, param);
   } catch (e) {
     console.error(e);
     view.innerHTML = `<div class="card"><p class="msg">${esc(e.message)}</p></div>`;

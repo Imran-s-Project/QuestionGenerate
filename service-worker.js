@@ -1,9 +1,9 @@
 // Bump VERSION on every release so old caches are removed.
-const VERSION = 'qg-shell-v3';
+const VERSION = 'qg-shell-v4';
 const SHELL = ['./', 'index.html', 'manifest.json', 'css/app.css', 'assets/icons/icon.svg',
   'js/app.js', 'js/router.js', 'js/firebase.js', 'js/firebase-config.js',
   'js/services/auth-service.js', 'js/services/config-service.js',
-  'js/utilities/dom.js', 'js/utilities/i18n.js', 'js/utilities/errors.js', 'js/services/firestore-service.js', 'js/services/org-context.js', 'js/utilities/strings-institutions.js', 'js/modules/institutions.js', 'js/modules/users.js', 'js/modules/dashboard.js'];
+  'js/utilities/dom.js', 'js/utilities/i18n.js', 'js/utilities/errors.js', 'js/services/firestore-service.js', 'js/services/org-context.js', 'js/utilities/strings-institutions.js', 'js/modules/institutions.js', 'js/modules/users.js', 'js/services/question-types.js', 'js/services/question-service.js', 'js/utilities/rich-text.js', 'js/utilities/strings-questions.js', 'js/modules/question-builder.js', 'js/modules/question-bank.js', 'js/modules/dashboard.js'];
 
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(

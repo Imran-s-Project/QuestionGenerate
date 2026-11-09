@@ -50,6 +50,17 @@ service cloud.firestore {
         && inviteAfter(orgId, d.inviteId).status == 'used' && inviteAfter(orgId, d.inviteId).usedBy == request.auth.uid;
     }
 
+    // Field checks for questions. Images are external https URLs only, never inline data.
+    function validQuestion() {
+      let d = request.resource.data;
+      return d.statement is string && d.statement.size() > 0 && d.statement.size() <= 20000
+        && d.marks is number && d.marks >= 0 && d.marks <= 1000
+        && d.difficulty in ['easy', 'medium', 'hard']
+        && d.status in ['draft', 'active', 'archived']
+        && (!('imageUrl' in d) || d.imageUrl == '' || d.imageUrl.matches('https?://.*'))
+        && (!('tags' in d) || (d.tags is list && d.tags.size() <= 30));
+    }
+
     // Simple organization-level collections, grouped by who may touch them.
     function canReadCol(orgId, col) {
       return (col in ['subjects', 'departments', 'classes', 'categories', 'questionTypes', 'questionCollections', 'settings', 'templates', 'paperLayouts'] && isActiveMember(orgId))
@@ -116,8 +127,8 @@ service cloud.firestore {
 
       match /questions/{questionId} {
         allow read: if isActiveMember(orgId);
-        allow create: if canWriteQuestions(orgId) && created(orgId) && request.resource.data.status in ['draft', 'active', 'archived'];
-        allow update: if canWriteQuestions(orgId) && updated(orgId) && request.resource.data.status in ['draft', 'active', 'archived'];
+        allow create: if canWriteQuestions(orgId) && created(orgId) && validQuestion();
+        allow update: if canWriteQuestions(orgId) && updated(orgId) && validQuestion();
         allow delete: if isAdmin(orgId);
 
         // Answer keys are kept apart so student-facing reads of a question never include them.

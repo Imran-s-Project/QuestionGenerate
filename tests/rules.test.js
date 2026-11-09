@@ -12,7 +12,7 @@ const anon = () => env.unauthenticatedContext().firestore();
 const stamps = u => ({ createdBy: u, createdAt: serverTimestamp(), updatedBy: u, updatedAt: serverTimestamp() });
 const touch = u => ({ updatedBy: u, updatedAt: serverTimestamp() });
 const member = (u, role, actor = u, extra = {}) => ({ uid: u, role, status: 'active', answerKeyAccess: false, email: '', displayName: '', ...stamps(actor), ...extra });
-const question = (u, extra = {}) => ({ orgId: 'orgA', type: 'mcq', status: 'draft', marks: 1, ...stamps(u), ...extra });
+const question = (u, extra = {}) => ({ orgId: 'orgA', type: 'mcq', status: 'draft', marks: 1, statement: 'Q', difficulty: 'easy', ...stamps(u), ...extra });
 
 // Seed: orgA has owner/admin/teacher/reviewer/viewer (+ a viewer with answer-key access); orgB has its own owner.
 beforeEach(async () => {
@@ -134,4 +134,13 @@ test('institution profile: admins edit, members cannot, logo must be an https UR
   await assertSucceeds(updateDoc(org('adm'), { logoUrl: 'https://x.test/l.png', address: 'Dhaka', ...touch('adm') }));
   await assertFails(updateDoc(org('adm'), { logoUrl: 'data:image/png;base64,AAAA', ...touch('adm') }));
   await assertFails(updateDoc(org('tea'), { address: 'x', ...touch('tea') }));
+});
+
+// ---------- Phase 4: question fields ----------
+test('questions: field validation (marks, difficulty, https images, tag count)', async () => {
+  const q = id => doc(as('tea'), 'organizations/orgA/questions/' + id);
+  await assertFails(setDoc(q('v1'), question('tea', { marks: -1 })));
+  await assertFails(setDoc(q('v2'), question('tea', { difficulty: 'impossible' })));
+  await assertFails(setDoc(q('v3'), question('tea', { imageUrl: 'data:image/png;base64,AAAA' })));
+  await assertSucceeds(setDoc(q('v4'), question('tea', { imageUrl: 'https://x.test/a.png', tags: ['x'] })));
 });

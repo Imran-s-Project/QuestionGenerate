@@ -42,3 +42,10 @@ A member with `answerKeyAccess: true` can read and write answer keys whatever th
 - Members join with an invite code (`orgId.token`). Redeeming creates the member and marks the invite used in one batch; the rules verify both with `getAfter`.
 - The institution profile (address, contact, academic session, brand color, paper header, default footer, https logo URL) lives in the organization document. Inline image data is rejected by the rules.
 - Composite indexes cover the planned Question Bank filters. If a new filter combination needs an index, Firestore's error message contains a link that creates it.
+
+## Questions (Phase 4)
+- `questions/{id}`: student-facing content only. `type` (built-in id or `c_<customTypeId>`), `family`, `statement` (controlled markup, see below), `imageUrl` (https), `instructions`, `subjectId`, `topic`, `chapter`, `chapterId`, `category`, `difficulty` (easy/medium/hard), `marks`, `negativeMarks`, `timeSeconds`, `tags` (lowercase), `status` (draft/active/archived), `keywords` (search words), `fingerprint` (SHA-256 for duplicate warnings), plus family fields: `options` or `lefts`/`rights` (shuffled) or `items` (shuffled) or `subs`.
+- `questions/{id}/answerKey/main`: `correct` (option ids), `value` (true/false), `blanks`, `answer`, `map` (left id to right id), `order` (item ids), `subs` (sub-question answers), `explanation`, `notes`. Correct answers never appear in the question document.
+- Text is stored as controlled markup, never HTML: `**bold**`, `*italic*`, `++underline++`, `^(sup)`, `_(sub)`, `{1/2}`, `- list`, `| table |`. It is escaped and converted by a whitelist renderer (`js/utilities/rich-text.js`).
+- Search uses the `keywords` array (one word per query, array-contains). One filter (subject, type, difficulty, chapter or tag) can be combined with status and search; more combinations need more indexes.
+- `questionTypes/{id}`: custom types (`name`, `family`, `count`, `instructions`, `criteria`). Built-in types live in `js/services/question-types.js`.

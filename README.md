@@ -12,8 +12,8 @@ Plain HTML, CSS and JavaScript (no framework, no build step) on Firebase Firesto
 | 1 | Foundation: app shell, responsive layout, sign-in, offline cache, PWA, English and বাংলা | Done |
 | 2 | Database and security: rules, indexes, data layer, rules tests | Done (run the tests yourself) |
 | 3 | Institutions: create, switch, edit; members, roles, invite codes | Done |
-| 4 | Question types, question builder, answer keys, question bank | Next |
-| 5 | Exams, marks, paper generation, multiple sets | Planned |
+| 4 | Question types, custom types, builder, answer keys, question bank, search | Done (core). Department/class fields and bulk edit come later. |
+| 5 | Exams, marks, paper generation, multiple sets | Next |
 | 6 | Paper designer and live preview | Planned |
 | 7 | Import and export (PDF, DOCX, XLSX, CSV, JSON) | Planned |
 | 8 | Auto-save, backup and restore, analytics, settings | Planned |
@@ -51,17 +51,23 @@ question-generate/
 │   ├── modules/
 │   │   ├── dashboard.js   Overview page
 │   │   ├── institutions.js   Create, switch, join and edit institutions
+│   │   ├── question-bank.js   Search, filter, archive, duplicate
+│   │   ├── question-builder.js   Question editor with rich text and answer key
 │   │   └── users.js   Members, roles and invite codes
 │   ├── services/
 │   │   ├── auth-service.js   Sign-in, profile, preferences
 │   │   ├── config-service.js   Central configuration (Firestore, cache, defaults)
 │   │   ├── firestore-service.js   Database layout and data access
-│   │   └── org-context.js   The active institution
+│   │   ├── org-context.js   The active institution
+│   │   ├── question-service.js   Questions, answer keys, search, duplicates
+│   │   └── question-types.js   22 built-in types and custom types
 │   ├── utilities/
 │   │   ├── dom.js   Escaping, toasts, confirm dialog
 │   │   ├── errors.js   Central error messages
 │   │   ├── i18n.js   English and Bangla text engine
-│   │   └── strings-institutions.js   Texts for institutions, members and invites
+│   │   ├── rich-text.js   Safe question markup renderer
+│   │   ├── strings-institutions.js   Texts for institutions, members and invites
+│   │   └── strings-questions.js   Texts for the builder and bank
 │   ├── app.js   Startup, sign-in, language, institution switcher
 │   ├── firebase-config.js   YOUR Firebase keys go here
 │   ├── firebase.js   Firebase setup (Firestore and Auth only)

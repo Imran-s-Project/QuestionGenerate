@@ -6,7 +6,7 @@ const CODES = {
   'auth/invalid-credential': 'err.credentials', 'auth/wrong-password': 'err.credentials', 'auth/user-not-found': 'err.credentials',
   'auth/invalid-email': 'err.email', 'auth/email-already-in-use': 'err.exists', 'auth/weak-password': 'err.weak',
   'auth/network-request-failed': 'err.network', unavailable: 'err.network',
-  'app/invalid-invite': 'err.invite',
+  'app/invalid-invite': 'err.invite', 'failed-precondition': 'err.index',
   'permission-denied': 'err.permission', 'auth/popup-closed-by-user': 'err.cancelled'
 };
 export const errorMessage = e => t(CODES[e?.code] || 'err.generic');
