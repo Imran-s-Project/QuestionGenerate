@@ -5,14 +5,10 @@ import { t } from '../utilities/i18n.js';
 import { esc, toast, confirmBox } from '../utilities/dom.js';
 import { renderRich, plainText, wrapSelection } from '../utilities/rich-text.js';
 import { handleError } from '../utilities/errors.js';
+import { shuffle } from '../utilities/random.js';
 
 let off = null;
 const rid = () => 'o' + Math.random().toString(36).slice(2, 7);
-const shuffle = a => {
-  const b = [...a];
-  for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
-  return a.length > 1 && b.every((x, i) => x === a[i]) ? [...b.slice(1), b[0]] : b; // never leave the correct order untouched
-};
 const TOOLS = [['B', '**', '**'], ['I', '*', '*'], ['U', '++', '++'], ['x²', '^(', ')'], ['x₂', '_(', ')'], ['½', '{', '/}'], ['•', '\n- ', ''], ['▦', '\n| a | b |\n| c | d |\n', '']];
 const SYMBOLS = '² ³ √ π ∑ ∫ ∞ ≤ ≥ ≠ ± × ÷ ° ∠ ∴ ∵ → ½ ¼ ¾ α β θ λ μ Δ Ω'.split(' ');
 

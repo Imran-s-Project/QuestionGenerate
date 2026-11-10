@@ -1,7 +1,7 @@
 // Paste your Firebase web-app config here (Firebase Console > Project settings > Your apps).
 // Firebase Storage is NOT used in this project, so no storageBucket is needed.
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 export const firebaseConfig = {
   apiKey: "AIzaSyDD21uW3E9kMCD5MfUd9Kk4GA2NrgRhVK8",
   authDomain: "autoquestiongenerators.firebaseapp.com",

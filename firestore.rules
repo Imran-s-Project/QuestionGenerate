@@ -61,6 +61,14 @@ service cloud.firestore {
         && (!('tags' in d) || (d.tags is list && d.tags.size() <= 30));
     }
 
+    // Field checks for exams: title, status and a pass mark that never exceeds the total.
+    function validExam() {
+      let d = request.resource.data;
+      return d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && d.status in ['draft', 'final', 'archived']
+        && d.totalMarks is number && d.totalMarks >= 0 && d.passMarks is number && d.passMarks >= 0 && d.passMarks <= d.totalMarks;
+    }
+
     // Simple organization-level collections, grouped by who may touch them.
     function canReadCol(orgId, col) {
       return (col in ['subjects', 'departments', 'classes', 'categories', 'questionTypes', 'questionCollections', 'settings', 'templates', 'paperLayouts'] && isActiveMember(orgId))
@@ -69,6 +77,7 @@ service cloud.firestore {
     }
     function canWriteCol(orgId, col) {
       return (col in ['subjects', 'departments', 'classes', 'categories', 'questionTypes', 'questionCollections'] && canWriteQuestions(orgId))
+        || (col == 'categories' && canManageExams(orgId))
         || (col in ['templates', 'paperLayouts'] && canManageTemplates(orgId))
         || (col == 'settings' && isAdmin(orgId))
         || (col in ['imports', 'exports'] && isStaff(orgId))
@@ -158,8 +167,8 @@ service cloud.firestore {
 
       match /exams/{examId} {
         allow read: if isActiveMember(orgId);
-        allow create: if canManageExams(orgId) && created(orgId) && request.resource.data.status in ['draft', 'final', 'archived'];
-        allow update: if canManageExams(orgId) && updated(orgId) && request.resource.data.status in ['draft', 'final', 'archived'];
+        allow create: if canManageExams(orgId) && created(orgId) && validExam();
+        allow update: if canManageExams(orgId) && updated(orgId) && validExam();
         allow delete: if isAdmin(orgId);
 
         match /{sub}/{subId} {

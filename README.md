@@ -13,8 +13,8 @@ Plain HTML, CSS and JavaScript (no framework, no build step) on Firebase Firesto
 | 2 | Database and security: rules, indexes, data layer, rules tests | Done (run the tests yourself) |
 | 3 | Institutions: create, switch, edit; members, roles, invite codes | Done |
 | 4 | Question types, custom types, builder, answer keys, question bank, search | Done (core). Department/class fields and bulk edit come later. |
-| 5 | Exams, marks, paper generation, multiple sets | Next |
-| 6 | Paper designer and live preview | Planned |
+| 5 | Exams, sections and marks, question selection, multiple sets | Done (core). Cross-exam repetition rules and presets come later. |
+| 6 | Paper designer and live preview | Next |
 | 7 | Import and export (PDF, DOCX, XLSX, CSV, JSON) | Planned |
 | 8 | Auto-save, backup and restore, analytics, settings | Planned |
 | 9 to 10 | Optimization, testing, final audit and user guide | Planned |
@@ -50,13 +50,16 @@ question-generate/
 ├── js/
 │   ├── modules/
 │   │   ├── dashboard.js   Overview page
+│   │   ├── exam-manager.js   Exam setup, sections and marks
 │   │   ├── institutions.js   Create, switch, join and edit institutions
+│   │   ├── paper-generator.js   Question selection and set generation
 │   │   ├── question-bank.js   Search, filter, archive, duplicate
 │   │   ├── question-builder.js   Question editor with rich text and answer key
 │   │   └── users.js   Members, roles and invite codes
 │   ├── services/
 │   │   ├── auth-service.js   Sign-in, profile, preferences
 │   │   ├── config-service.js   Central configuration (Firestore, cache, defaults)
+│   │   ├── exam-service.js   Exams, sections, selection, sets
 │   │   ├── firestore-service.js   Database layout and data access
 │   │   ├── org-context.js   The active institution
 │   │   ├── question-service.js   Questions, answer keys, search, duplicates
@@ -65,7 +68,9 @@ question-generate/
 │   │   ├── dom.js   Escaping, toasts, confirm dialog
 │   │   ├── errors.js   Central error messages
 │   │   ├── i18n.js   English and Bangla text engine
+│   │   ├── random.js   Shuffle helper
 │   │   ├── rich-text.js   Safe question markup renderer
+│   │   ├── strings-exams.js   Texts for exams and paper generation
 │   │   ├── strings-institutions.js   Texts for institutions, members and invites
 │   │   └── strings-questions.js   Texts for the builder and bank
 │   ├── app.js   Startup, sign-in, language, institution switcher

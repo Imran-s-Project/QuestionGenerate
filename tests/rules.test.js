@@ -67,9 +67,9 @@ test('answer keys are visible only to authorised members', async () => {
 });
 
 test('exams: owners write, reviewers only read', async () => {
-  await assertSucceeds(setDoc(doc(as('own'), 'organizations/orgA/exams/e1'), { orgId: 'orgA', status: 'draft', ...stamps('own') }));
+  await assertSucceeds(setDoc(doc(as('own'), 'organizations/orgA/exams/e1'), { orgId: 'orgA', status: 'draft', title: 'T', totalMarks: 10, passMarks: 3, ...stamps('own') }));
   await assertSucceeds(getDoc(doc(as('rev'), 'organizations/orgA/exams/e1')));
-  await assertFails(setDoc(doc(as('rev'), 'organizations/orgA/exams/e2'), { orgId: 'orgA', status: 'draft', ...stamps('rev') }));
+  await assertFails(setDoc(doc(as('rev'), 'organizations/orgA/exams/e2'), { orgId: 'orgA', status: 'draft', title: 'T', totalMarks: 10, passMarks: 3, ...stamps('rev') }));
 });
 
 test('audit log is append-only and readable by admins only', async () => {
@@ -143,4 +143,15 @@ test('questions: field validation (marks, difficulty, https images, tag count)',
   await assertFails(setDoc(q('v2'), question('tea', { difficulty: 'impossible' })));
   await assertFails(setDoc(q('v3'), question('tea', { imageUrl: 'data:image/png;base64,AAAA' })));
   await assertSucceeds(setDoc(q('v4'), question('tea', { imageUrl: 'https://x.test/a.png', tags: ['x'] })));
+});
+
+// ---------- Phase 5: exams ----------
+test('exams: title and pass marks are validated; exam managers add categories and sets', async () => {
+  const ex = (u, extra = {}) => ({ orgId: 'orgA', status: 'draft', title: 'T', totalMarks: 50, passMarks: 17, ...stamps(u), ...extra });
+  await assertFails(setDoc(doc(as('own'), 'organizations/orgA/exams/e5'), ex('own', { passMarks: 60 })));
+  await assertFails(setDoc(doc(as('own'), 'organizations/orgA/exams/e6'), ex('own', { title: '' })));
+  await assertSucceeds(setDoc(doc(as('own'), 'organizations/orgA/exams/e7'), ex('own')));
+  await env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'organizations/orgA/members/mgr'), member('mgr', 'examManager')));
+  await assertSucceeds(setDoc(doc(as('mgr'), 'organizations/orgA/categories/c1'), { orgId: 'orgA', name: 'Quiz', ...stamps('mgr') }));
+  await assertSucceeds(setDoc(doc(as('mgr'), 'organizations/orgA/exams/e7/sets/s1'), { orgId: 'orgA', label: 'A', questionOrder: {}, optionOrder: {}, ...stamps('mgr') }));
 });

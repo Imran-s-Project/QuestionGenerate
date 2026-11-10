@@ -8,7 +8,9 @@ const BUILT = {
   institutions: () => import('./modules/institutions.js'),
   users: () => import('./modules/users.js'),
   questionBuilder: () => import('./modules/question-builder.js'),
-  questionBank: () => import('./modules/question-bank.js')
+  questionBank: () => import('./modules/question-bank.js'),
+  examManager: () => import('./modules/exam-manager.js'),
+  paperGenerator: () => import('./modules/paper-generator.js')
 };
 let current = null, seq = 0;
 

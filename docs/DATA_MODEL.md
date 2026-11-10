@@ -49,3 +49,10 @@ A member with `answerKeyAccess: true` can read and write answer keys whatever th
 - Text is stored as controlled markup, never HTML: `**bold**`, `*italic*`, `++underline++`, `^(sup)`, `_(sub)`, `{1/2}`, `- list`, `| table |`. It is escaped and converted by a whitelist renderer (`js/utilities/rich-text.js`).
 - Search uses the `keywords` array (one word per query, array-contains). One filter (subject, type, difficulty, chapter or tag) can be combined with status and search; more combinations need more indexes.
 - `questionTypes/{id}`: custom types (`name`, `family`, `count`, `instructions`, `criteria`). Built-in types live in `js/services/question-types.js`.
+
+## Exams (Phase 5)
+- `exams/{id}`: `title`, `code`, `version`, `categoryId` (built-in id or `c_<categories doc id>`), `examType`, `session`, `className`, `department`, `group`, `subjectId`, `date`, `startTime`, `endTime`, `durationMin`, `totalMarks`, `passMarks`, `negativeMarking`, `instructions`, `status` (draft/final/archived), `sectionCount`, `questionCount`. The rules reject an empty title and a pass mark above the total.
+- `exams/{id}/sections/{id}`: `title`, `type` (question type filter, empty = any), `count`, `marksEach`, `order`, `questionIds` (the selection; stored here instead of a separate `selections` collection). Section total = count x marksEach; the exam total must equal the sum of sections to be marked final.
+- `exams/{id}/sets/{id}`: `label` (A to F), `questionOrder` (section id to question ids), `optionOrder` (question id to option ids), shuffle flags. Sets hold permutations only. Answer letters are derived from the answer-key documents when needed, so student-readable data never contains answers.
+- Changing sections or the selection deletes the exam's sets in the same batch, so a set can never refer to an outdated selection.
+- Auto-fill picks randomly from the newest 300 active questions of the section's type (optional difficulty mix and chapter); `selections`, cross-exam repetition rules and rule presets are not built yet.

@@ -1,5 +1,6 @@
 import { MORE } from './strings-institutions.js';
 import { MORE_Q } from './strings-questions.js';
+import { MORE_X } from './strings-exams.js';
 // Translation-ready: add a language by adding one more object to D.
 const D = {
   bn: {
@@ -14,7 +15,7 @@ const D = {
     'status.online': 'অনলাইন', 'status.offline': 'অফলাইন',
     'dash.status': 'সিস্টেমের অবস্থা', 'dash.user': 'সাইন-ইন করা অ্যাকাউন্ট', 'dash.network': 'নেটওয়ার্ক', 'dash.config': 'কনফিগারেশনের উৎস',
     'dash.src.firestore': 'Firestore', 'dash.src.cache': 'লোকাল ক্যাশ (অফলাইন কপি)', 'dash.src.defaults': 'বিল্ট-ইন ডিফল্ট (Firestore-এ এখনও appConfig/main নেই)',
-    'dash.phase': 'নির্মাণের অগ্রগতি', 'dash.phaseValue': 'ফেজ ৪ — প্রশ্নের ধরন, নির্মাতা ও প্রশ্নব্যাংক',
+    'dash.phase': 'নির্মাণের অগ্রগতি', 'dash.phaseValue': 'ফেজ ৫ — পরীক্ষা ও প্রশ্নের সেট',
     'dash.noStats': 'প্রশ্নব্যাংক ও পরীক্ষা মডিউল তৈরি হলে প্রশ্ন ও পরীক্ষার পরিসংখ্যান বাস্তব ডেটা থেকে এখানে দেখানো হবে। কোনো নকল সংখ্যা দেখানো হয় না।',
     'setup.title': 'Firebase সেটআপ দরকার', 'setup.body': 'js/firebase-config.js ফাইলে আপনার Firebase প্রজেক্টের কনফিগ বসিয়ে পেজ রিলোড করুন।',
     'err.credentials': 'ইমেইল বা পাসওয়ার্ড সঠিক নয়।', 'err.email': 'ইমেইল ঠিকানাটি সঠিক নয়।', 'err.exists': 'এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে।',
@@ -33,7 +34,7 @@ const D = {
     'status.online': 'Online', 'status.offline': 'Offline',
     'dash.status': 'System status', 'dash.user': 'Signed in as', 'dash.network': 'Network', 'dash.config': 'Configuration source',
     'dash.src.firestore': 'Firestore', 'dash.src.cache': 'Local cache (offline copy)', 'dash.src.defaults': 'Built-in defaults (no appConfig/main in Firestore yet)',
-    'dash.phase': 'Build progress', 'dash.phaseValue': 'Phase 4 — Question types, builder and bank',
+    'dash.phase': 'Build progress', 'dash.phaseValue': 'Phase 5 — Exams and question sets',
     'dash.noStats': 'Question and exam statistics will appear here from real data once the Question Bank and Exam modules exist. No placeholder numbers are shown.',
     'setup.title': 'Firebase setup needed', 'setup.body': 'Paste your Firebase project config into js/firebase-config.js, then reload.',
     'err.credentials': 'Wrong email or password.', 'err.email': 'That email address is not valid.', 'err.exists': 'An account with this email already exists.',
@@ -42,7 +43,7 @@ const D = {
   }
 };
 
-for (const l in MORE) Object.assign(D[l], MORE[l], MORE_Q[l]);
+for (const l in MORE) Object.assign(D[l], MORE[l], MORE_Q[l], MORE_X[l]);
 let lang = localStorage.getItem('qg.lang');
 if (!D[lang]) lang = 'bn';
 export const getLang = () => lang;
