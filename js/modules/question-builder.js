@@ -6,6 +6,7 @@ import { esc, toast, confirmBox } from '../utilities/dom.js';
 import { renderRich, plainText, wrapSelection } from '../utilities/rich-text.js';
 import { handleError } from '../utilities/errors.js';
 import { shuffle } from '../utilities/random.js';
+import { validateQuestion } from '../utilities/question-schema.js';
 
 let off = null;
 const rid = () => 'o' + Math.random().toString(36).slice(2, 7);
@@ -54,24 +55,7 @@ const F = (name, kind = 'text', val = '', extra = '') => `<label>${t('q.' + name
 const TA = (name, val = '', rows = 2) => `<label>${t('q.' + name)}<textarea name="${name}" rows="${rows}">${esc(val)}</textarea></label>`;
 const S = (name, opts, cur) => `<label>${t('q.' + name)}<select name="${name}">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
 
-function validate(tp, q, ak) {
-  const e = [], fam = tp.family;
-  if (!plainText(q.statement)) e.push('q.err.statement');
-  if (!(q.marks >= 0)) e.push('q.err.marks');
-  if (fam === 'choice' || fam === 'multi') {
-    if ((q.options?.length || 0) < 2) e.push('q.err.options');
-    else if (!ak.correct.length || (fam === 'choice' && ak.correct.length !== 1)) e.push('q.err.correct');
-  }
-  if (fam === 'truefalse' && typeof ak.value !== 'boolean') e.push('q.err.correct');
-  if (fam === 'blank' && (!ak.blanks.length || ak.blanks.length !== (q.statement.match(/___/g) || []).length)) e.push('q.err.blanks');
-  if (fam === 'match' && (q.lefts?.length || 0) < 2) e.push('q.err.options');
-  if (fam === 'order' && (q.items?.length || 0) < 2) e.push('q.err.options');
-  if (fam === 'structured') {
-    if (!q.subs?.length) e.push('q.err.options');
-    else if (Math.abs(q.subs.reduce((s, x) => s + x.marks, 0) - q.marks) > 1e-9) e.push('q.err.sum');
-  }
-  return e;
-}
+const validate = (tp, q, ak) => validateQuestion({ ...q, family: tp.family }, ak);
 
 export async function mount(el, param) {
   const root = document.createElement('div');

@@ -69,3 +69,10 @@ A member with `answerKeyAccess: true` can read and write answer keys whatever th
 - Exam modes: student paper (DOCX, TXT), teacher copy (DOCX, TXT), answer key (CSV, XLSX, TXT, JSON), detailed solutions (DOCX, TXT), examination archive (JSON). Answer keys are read only for modes that need them. For PDF use Paper Preview, Print, "Save as PDF".
 - Question bank export: CSV, XLSX, JSON, TXT, optionally with answers and explanations. CSV/XLSX columns: `BANK_HEAD` in `js/services/export-service.js` (options A to F, `correct` letters, `answer` for other families). The JSON format `question-generate/questions` (version 1) is what the import will read back.
 - `exports/{id}` keeps a history record of each export (best effort) and the audit log gets an entry.
+
+## Import (Phase 7, part 2)
+- Sources: CSV/TSV/semicolon text, XLSX (first sheet, read in the browser), JSON, or pasted text. DOCX is not supported. The file is parsed on the device and never stored; the `imports/{id}` record keeps only the file name, counts and status.
+- Spreadsheet columns are `IMPORT_FIELDS` in `js/utilities/question-schema.js` (the same list the export uses). Columns are matched by header name and can be remapped. Choice questions use `optionA` to `optionF` and `correct` letters; true/false, blanks and written answers use `answer`. Match, ordering and structured questions need the JSON format `question-generate/questions`.
+- Checks per row (same validator as the builder): statement, marks, difficulty, options, correct answer, blanks. Possible duplicates (same fingerprint inside the file or already in the bank) are flagged and unticked by default; nothing is deleted or overwritten. Statements can be corrected in the preview.
+- Saving: batches of 200 questions (with their answer keys). Cancel stops between batches. On a failed batch saving stops and the report shows what was saved and which rows were not. Subjects named in the file are reused by name or created.
+- Questions are always created as new documents, by the importing user, with fresh ids and timestamps.

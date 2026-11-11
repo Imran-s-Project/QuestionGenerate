@@ -15,8 +15,8 @@ Plain HTML, CSS and JavaScript (no framework, no build step) on Firebase Firesto
 | 4 | Question types, custom types, builder, answer keys, question bank, search | Done (core). Department/class fields and bulk edit come later. |
 | 5 | Exams, sections and marks, question selection, multiple sets | Done (core). Cross-exam repetition rules and presets come later. |
 | 6 | Paper designer, live page-by-page preview, print, layout templates | Done (core). Student paper only; teacher copy comes with Phase 7. |
-| 7 | Export Center (DOCX, XLSX, CSV, JSON, TXT, print to PDF) | Done (core). Import (CSV, JSON, paste) is next. |
-| 8 | Auto-save, backup and restore, analytics, settings | Planned |
+| 7 | Export Center and import (CSV, XLSX, JSON, paste) | Done (core). DOCX import and direct PDF files are not built. |
+| 8 | Auto-save, backup and restore, analytics, settings | Next |
 | 9 to 10 | Optimization, testing, final audit and user guide | Planned |
 
 Menu items for unbuilt phases are marked "Phase N" and open an honest "planned" page.
@@ -53,6 +53,7 @@ question-generate/
 │   │   ├── dashboard.js   Overview page
 │   │   ├── exam-manager.js   Exam setup, sections and marks
 │   │   ├── exports.js   Export Center
+│   │   ├── imports.js   Import wizard
 │   │   ├── institutions.js   Create, switch, join and edit institutions
 │   │   ├── paper-generator.js   Question selection and set generation
 │   │   ├── paper-preview.js   Live preview, layout designer, print
@@ -66,6 +67,7 @@ question-generate/
 │   │   ├── exam-service.js   Exams, sections, selection, sets
 │   │   ├── export-service.js   Export data: papers, answer keys, bank, archive
 │   │   ├── firestore-service.js   Database layout and data access
+│   │   ├── import-service.js   Duplicate check and batched import
 │   │   ├── layout-service.js   Paper layouts: fields, defaults, storage
 │   │   ├── org-context.js   The active institution
 │   │   ├── question-service.js   Questions, answer keys, search, duplicates
@@ -76,10 +78,13 @@ question-generate/
 │   │   ├── i18n.js   English and Bangla text engine
 │   │   ├── office.js   DOCX, XLSX, CSV, TXT builders and download
 │   │   ├── paper-render.js   Builds the paginated student paper
+│   │   ├── parse.js   CSV, XLSX, JSON readers
+│   │   ├── question-schema.js   Question schema, validation, row conversion
 │   │   ├── random.js   Shuffle helper
 │   │   ├── rich-text.js   Safe question markup renderer
 │   │   ├── strings-exams.js   Texts for exams and paper generation
 │   │   ├── strings-export.js   Texts for the Export Center
+│   │   ├── strings-import.js   Texts for the import
 │   │   ├── strings-institutions.js   Texts for institutions, members and invites
 │   │   ├── strings-paper.js   Texts for the designer and the printed paper
 │   │   ├── strings-questions.js   Texts for the builder and bank

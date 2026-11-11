@@ -4,6 +4,7 @@ import { getExam, loadSets, getQuestionsById, getAnswerKeys } from './exam-servi
 import { listQuestions, strip } from './question-service.js';
 import { tIn } from '../utilities/i18n.js';
 import { num, LET } from '../utilities/paper-render.js';
+import { IMPORT_FIELDS } from '../utilities/question-schema.js';
 
 const warn = e => console.warn('Export record not written', e);
 export const KEY_ROLES = ['owner', 'admin', 'teacher', 'editor', 'reviewer', 'examManager']; // roles that may read answer keys (firestore.rules)
@@ -88,8 +89,7 @@ export function archiveOf(b, org) {
     questions: Object.values(b.qmap).map(q => ({ ...strip(q), id: q.id, answerKey: b.keys[q.id] ? strip(b.keys[q.id]) : undefined })) };
 }
 
-export const BANK_HEAD = ['id', 'type', 'family', 'statement', 'optionA', 'optionB', 'optionC', 'optionD', 'optionE', 'optionF', 'correct', 'answer', 'explanation',
-  'difficulty', 'marks', 'negativeMarks', 'timeSeconds', 'subject', 'topic', 'chapter', 'category', 'tags', 'status'];
+export const BANK_HEAD = ['id', ...IMPORT_FIELDS];
 /** One row per question. Letters are always A-F so the file can be imported again. */
 export function bankRows(items, keys, subjects) {
   const sn = Object.fromEntries(subjects.map(s => [s.id, s.name]));
@@ -99,8 +99,8 @@ export function bankRows(items, keys, subjects) {
       ak?.explanation || '', q.difficulty, q.marks ?? 0, q.negativeMarks ?? 0, q.timeSeconds ?? 0, sn[q.subjectId] || '', q.topic || '', q.chapter || '', q.category || '', (q.tags || []).join(';'), q.status];
   })];
 }
-export const bankJson = (items, keys, org) => ({ format: 'question-generate/questions', version: 1, exportedAt: new Date().toISOString(), institution: org.name,
-  questions: items.map(q => ({ ...strip(q), answerKey: keys[q.id] ? strip(keys[q.id]) : undefined })) });
+export const bankJson = (items, keys, org, subjects = []) => ({ format: 'question-generate/questions', version: 1, exportedAt: new Date().toISOString(), institution: org.name,
+  questions: items.map(q => ({ ...strip(q), subject: subjects.find(x => x.id === q.subjectId)?.name || '', answerKey: keys[q.id] ? strip(keys[q.id]) : undefined })) });
 
 /** Reads the bank page by page (200 at a time, at most 5,000 questions). */
 export async function fetchBank(orgId, status, withAnswers, onProgress) {

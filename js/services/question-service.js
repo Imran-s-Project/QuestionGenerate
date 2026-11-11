@@ -1,12 +1,12 @@
 import { db, fs } from '../firebase.js';
 import { ref, forCreate, forUpdate, logAudit } from './firestore-service.js';
 import { plainText } from '../utilities/rich-text.js';
+import { strip } from '../utilities/question-schema.js';
 
 const warn = e => console.warn('Audit log not written', e);
 const norm = s => plainText(s).normalize('NFC').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ').trim(); // \p{M} keeps Bengali vowel signs
 const akRef = (orgId, id) => fs.doc(ref.answerKey(orgId, id), 'main');
-const SYSTEM = ['id', 'orgId', 'questionId', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt', 'fingerprint'];
-export const strip = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !SYSTEM.includes(k)));
+export { strip };
 
 /** Duplicate fingerprint: SHA-256 of the normalized statement plus the normalized option/item texts (order-independent). */
 export async function fingerprint(q) {
@@ -15,7 +15,7 @@ export async function fingerprint(q) {
   return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
 }
 /** Lowercase search words (statement + tags) for array-contains search. Firestore has no full-text search. */
-const keywordsOf = q => [...new Set([...norm(q.statement).split(' ').filter(w => w.length > 1), ...(q.tags || [])])].slice(0, 60);
+export const keywordsOf = q => [...new Set([...norm(q.statement).split(' ').filter(w => w.length > 1), ...(q.tags || [])])].slice(0, 60);
 
 export async function findDuplicate(orgId, fp, exceptId) {
   const s = await fs.getDocs(fs.query(ref.col(orgId, 'questions'), fs.where('fingerprint', '==', fp), fs.limit(2)));

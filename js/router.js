@@ -13,7 +13,8 @@ const BUILT = {
   paperGenerator: () => import('./modules/paper-generator.js'),
   paperPreview: () => import('./modules/paper-preview.js'),
   templates: () => import('./modules/templates.js'),
-  exports: () => import('./modules/exports.js')
+  exports: () => import('./modules/exports.js'),
+  imports: () => import('./modules/imports.js')
 };
 let current = null, seq = 0;
 

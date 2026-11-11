@@ -84,7 +84,7 @@ ${canKey ? `<label class="inline"><input type="checkbox" id="bk"> ${t('e.include
     const fmt = q('#bf').value, withAnswers = !!q('#bk')?.checked;
     const [bank, subjects] = await Promise.all([ex.fetchBank(org.id, q('#bs').value, withAnswers, n => status(`${t('e.working')} ${n}`)), listSubjects(org.id)]);
     const rows = ex.bankRows(bank.items, bank.keys, subjects);
-    const data = fmt === 'csv' ? csv(rows) : fmt === 'xlsx' ? toXlsx([{ name: 'Questions', rows }]) : fmt === 'json' ? JSON.stringify(ex.bankJson(bank.items, bank.keys, org), null, 2)
+    const data = fmt === 'csv' ? csv(rows) : fmt === 'xlsx' ? toXlsx([{ name: 'Questions', rows }]) : fmt === 'json' ? JSON.stringify(ex.bankJson(bank.items, bank.keys, org, subjects), null, 2)
       : bank.items.map((x, i) => `${i + 1}. ${x.statement}`).join('\n\n');
     download(`question-bank-${q('#bs').value}.${fmt}`, data, MIME[fmt]);
     ex.record(org.id, { kind: 'bank', format: fmt, count: bank.items.length, answers: withAnswers });
