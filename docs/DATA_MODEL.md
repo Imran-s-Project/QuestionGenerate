@@ -56,3 +56,16 @@ A member with `answerKeyAccess: true` can read and write answer keys whatever th
 - `exams/{id}/sets/{id}`: `label` (A to F), `questionOrder` (section id to question ids), `optionOrder` (question id to option ids), shuffle flags. Sets hold permutations only. Answer letters are derived from the answer-key documents when needed, so student-readable data never contains answers.
 - Changing sections or the selection deletes the exam's sets in the same batch, so a set can never refer to an outdated selection.
 - Auto-fill picks randomly from the newest 300 active questions of the section's type (optional difficulty mix and chapter); `selections`, cross-exam repetition rules and rule presets are not built yet.
+
+## Paper layouts (Phase 6)
+- `paperLayouts/{id}`: one design per document. Page (`pageSize` A4/Legal/Custom, `orientation`, `customW/H`, `margin`, `columns`, `border`), typography (`fontFamily`, `fontSize`, `lineHeight`, `qSpacing`, `sSpacing`, `paperLang`), header and student-information toggles, `marksAlign`, `optionsLayout`, `pageNumbers`, `footerText`, `watermark`, `name`, `isDefault`. Owners, admins and exam managers can write; all members can read.
+- The paper header uses the institution profile (name, address, https logo URL, paper header, default footer). Section titles and instructions come from the exam sections.
+- Pages are real elements: blocks are measured and moved to a new page when a page overflows, so the preview and the printed pages are identical. Printing uses the browser (choose "Save as PDF" for a file); direct PDF/DOCX export is Phase 7.
+- The student paper is built from question documents and set permutations only. `js/utilities/paper-render.js` and `js/modules/paper-preview.js` never read answer keys.
+- Bengali-capable fonts (Noto Sans Bengali, Noto Serif Bengali, Hind Siliguri) are loaded from Google Fonts and cached by the service worker after the first online use.
+
+## Export (Phase 7, part 1)
+- Everything is built in the browser and downloaded; nothing is uploaded. `js/utilities/zip.js` writes ZIP packages, `js/utilities/office.js` builds DOCX, XLSX, CSV (with BOM, formula-safe) and TXT.
+- Exam modes: student paper (DOCX, TXT), teacher copy (DOCX, TXT), answer key (CSV, XLSX, TXT, JSON), detailed solutions (DOCX, TXT), examination archive (JSON). Answer keys are read only for modes that need them. For PDF use Paper Preview, Print, "Save as PDF".
+- Question bank export: CSV, XLSX, JSON, TXT, optionally with answers and explanations. CSV/XLSX columns: `BANK_HEAD` in `js/services/export-service.js` (options A to F, `correct` letters, `answer` for other families). The JSON format `question-generate/questions` (version 1) is what the import will read back.
+- `exports/{id}` keeps a history record of each export (best effort) and the audit log gets an entry.

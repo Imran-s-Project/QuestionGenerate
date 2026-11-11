@@ -6,7 +6,7 @@ const warn = e => console.warn('Audit log not written', e);
 const norm = s => plainText(s).normalize('NFC').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ').trim(); // \p{M} keeps Bengali vowel signs
 const akRef = (orgId, id) => fs.doc(ref.answerKey(orgId, id), 'main');
 const SYSTEM = ['id', 'orgId', 'questionId', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt', 'fingerprint'];
-const strip = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !SYSTEM.includes(k)));
+export const strip = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !SYSTEM.includes(k)));
 
 /** Duplicate fingerprint: SHA-256 of the normalized statement plus the normalized option/item texts (order-independent). */
 export async function fingerprint(q) {

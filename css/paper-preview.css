@@ -1,0 +1,46 @@
+/* Paper preview and print. Pages are real elements: what you see is what prints. */
+.paper-wrap{overflow:hidden}
+#paper{display:grid;gap:16px;justify-content:start;transform-origin:top left}
+.page{position:relative;width:var(--pw);height:var(--ph);padding:var(--m);box-sizing:border-box;background:#fff;color:#000;box-shadow:0 2px 12px rgba(0,0,0,.25);font-size:var(--fs);line-height:var(--lh);overflow:hidden;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.page .frame{height:100%;display:flex;flex-direction:column;box-sizing:border-box}
+#paper.bordered .frame{border:1.2pt solid #000;padding:3mm}
+.pg-body{flex:1;min-height:0;overflow:hidden;column-count:var(--cols);column-gap:8mm;column-fill:auto}
+.blk{break-inside:avoid;margin-bottom:var(--qs)}
+.blk .blk{margin-bottom:0}
+.hd{display:flex;gap:4mm;align-items:center;justify-content:center;text-align:center;margin-bottom:3mm}
+.hd .logo{height:18mm;width:auto}
+.inst{font-size:1.4em;font-weight:700}
+.addr{font-size:.85em}
+.ttl{font-weight:700;font-size:1.15em;margin-top:1mm}
+.meta{display:flex;flex-wrap:wrap;gap:1mm 6mm;justify-content:center;font-size:.9em;margin-top:1mm}
+.stu{display:flex;flex-wrap:wrap;gap:2mm 6mm;margin:3mm 0}
+.stu span{display:flex;gap:2mm;flex:1 1 40mm;align-items:flex-end}
+.stu span::after{content:"";flex:1;border-bottom:1px solid #000}
+.ins{border:1px solid #000;padding:2mm;margin-bottom:3mm;font-size:.9em}
+.sh{display:flex;justify-content:space-between;gap:4mm;font-weight:700;margin:var(--ss) 0 2mm;border-bottom:1px solid #000}
+.si{font-size:.9em;margin-bottom:2mm}
+.q{display:flex;gap:2mm}
+.q .no{min-width:7mm}
+.qb{flex:1;min-width:0}
+.q .mk{white-space:nowrap}
+.qin{font-size:.85em;font-style:italic}
+.st p{margin:0}
+.qi{max-width:100%;max-height:60mm;object-fit:contain;display:block;margin:1mm 0}
+.op,.subq{list-style:none;margin:1mm 0 0;padding:0}
+.op.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 4mm}
+.mt{width:100%;border-collapse:collapse}
+.mt td{width:50%;padding:0 2mm;vertical-align:top}
+.page table td{border:0}
+.rh{font-size:.8em;text-align:right;border-bottom:1px solid #000;margin-bottom:2mm}
+.pg-foot{display:flex;justify-content:space-between;gap:4mm;font-size:.8em;border-top:1px solid #000;margin-top:2mm;padding-top:1mm}
+.wm{position:absolute;inset:0;display:grid;place-items:center;font-size:90px;font-weight:700;opacity:.07;transform:rotate(-30deg);pointer-events:none;white-space:nowrap}
+@media print{
+  body{background:#fff}
+  #sidebar,.topbar,#bottomNav,#toasts,.no-print{display:none!important}
+  #shell{display:block}
+  #view{padding:0;max-width:none;display:block}
+  .paper-wrap{height:auto!important;overflow:visible}
+  #paper{transform:none!important;display:block}
+  .page{box-shadow:none;break-after:page}
+  .page:last-child{break-after:auto}
+}

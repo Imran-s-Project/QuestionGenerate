@@ -14,8 +14,8 @@ Plain HTML, CSS and JavaScript (no framework, no build step) on Firebase Firesto
 | 3 | Institutions: create, switch, edit; members, roles, invite codes | Done |
 | 4 | Question types, custom types, builder, answer keys, question bank, search | Done (core). Department/class fields and bulk edit come later. |
 | 5 | Exams, sections and marks, question selection, multiple sets | Done (core). Cross-exam repetition rules and presets come later. |
-| 6 | Paper designer and live preview | Next |
-| 7 | Import and export (PDF, DOCX, XLSX, CSV, JSON) | Planned |
+| 6 | Paper designer, live page-by-page preview, print, layout templates | Done (core). Student paper only; teacher copy comes with Phase 7. |
+| 7 | Export Center (DOCX, XLSX, CSV, JSON, TXT, print to PDF) | Done (core). Import (CSV, JSON, paste) is next. |
 | 8 | Auto-save, backup and restore, analytics, settings | Planned |
 | 9 to 10 | Optimization, testing, final audit and user guide | Planned |
 
@@ -44,23 +44,29 @@ question-generate/
 │   └── icons/
 │       └── icon.svg   App icon
 ├── css/
-│   └── app.css   Design system and responsive layout
+│   ├── app.css   Design system and responsive layout
+│   └── paper-preview.css   Paper pages and print styles
 ├── docs/
 │   └── DATA_MODEL.md   Collections, fields and the role matrix
 ├── js/
 │   ├── modules/
 │   │   ├── dashboard.js   Overview page
 │   │   ├── exam-manager.js   Exam setup, sections and marks
+│   │   ├── exports.js   Export Center
 │   │   ├── institutions.js   Create, switch, join and edit institutions
 │   │   ├── paper-generator.js   Question selection and set generation
+│   │   ├── paper-preview.js   Live preview, layout designer, print
 │   │   ├── question-bank.js   Search, filter, archive, duplicate
 │   │   ├── question-builder.js   Question editor with rich text and answer key
+│   │   ├── templates.js   Paper layout templates
 │   │   └── users.js   Members, roles and invite codes
 │   ├── services/
 │   │   ├── auth-service.js   Sign-in, profile, preferences
 │   │   ├── config-service.js   Central configuration (Firestore, cache, defaults)
 │   │   ├── exam-service.js   Exams, sections, selection, sets
+│   │   ├── export-service.js   Export data: papers, answer keys, bank, archive
 │   │   ├── firestore-service.js   Database layout and data access
+│   │   ├── layout-service.js   Paper layouts: fields, defaults, storage
 │   │   ├── org-context.js   The active institution
 │   │   ├── question-service.js   Questions, answer keys, search, duplicates
 │   │   └── question-types.js   22 built-in types and custom types
@@ -68,11 +74,16 @@ question-generate/
 │   │   ├── dom.js   Escaping, toasts, confirm dialog
 │   │   ├── errors.js   Central error messages
 │   │   ├── i18n.js   English and Bangla text engine
+│   │   ├── office.js   DOCX, XLSX, CSV, TXT builders and download
+│   │   ├── paper-render.js   Builds the paginated student paper
 │   │   ├── random.js   Shuffle helper
 │   │   ├── rich-text.js   Safe question markup renderer
 │   │   ├── strings-exams.js   Texts for exams and paper generation
+│   │   ├── strings-export.js   Texts for the Export Center
 │   │   ├── strings-institutions.js   Texts for institutions, members and invites
-│   │   └── strings-questions.js   Texts for the builder and bank
+│   │   ├── strings-paper.js   Texts for the designer and the printed paper
+│   │   ├── strings-questions.js   Texts for the builder and bank
+│   │   └── zip.js   ZIP writer for DOCX and XLSX
 │   ├── app.js   Startup, sign-in, language, institution switcher
 │   ├── firebase-config.js   YOUR Firebase keys go here
 │   ├── firebase.js   Firebase setup (Firestore and Auth only)

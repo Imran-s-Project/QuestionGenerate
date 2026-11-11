@@ -50,7 +50,7 @@ export async function mount(el, param) {
 ${picker === s.id ? `<div class="grid"><input data-k="search" type="search" placeholder="${esc(t('bank.search'))}"><div class="list found">${foundHtml()}</div></div>` : ''}</div>`;
   const draw = () => {
     const { errors, marksDiff } = selectionIssues(sections, qmap);
-    root.innerHTML = `<div class="card grid"><h3>${esc(exam.title)}</h3><p>${t('x.sumQ')}: <b>${esc(exam.questionCount ?? 0)}</b> · ${t('x.totalMarks')}: <b>${esc(exam.totalMarks)}</b> <a class="btn sm" href="#/examManager/${esc(param)}">${t('x.edit')}</a></p>
+    root.innerHTML = `<div class="card grid"><h3>${esc(exam.title)}</h3><p>${t('x.sumQ')}: <b>${esc(exam.questionCount ?? 0)}</b> · ${t('x.totalMarks')}: <b>${esc(exam.totalMarks)}</b> <a class="btn sm" href="#/examManager/${esc(param)}">${t('x.edit')}</a> <a class="btn sm" href="#/paperPreview/${esc(param)}">${t('nav.paperPreview')}</a></p>
 ${errors.length || marksDiff ? `<ul class="warn">${errors.map(i => `<li>${esc(t(i.key, i.vars))}</li>`).join('')}${marksDiff ? `<li>${esc(t('x.warn.marks', { n: marksDiff }))}</li>` : ''}</ul>` : ''}</div>`
       + sections.map(secCard).join('')
       + `<div class="card grid"><h3>${t('x.gen.sets')}</h3><div class="row start"><label class="inline">${t('x.gen.numSets')} <select data-k="n">${[1, 2, 3, 4, 5, 6].map(n => `<option${n === 4 ? ' selected' : ''}>${n}</option>`).join('')}</select></label>

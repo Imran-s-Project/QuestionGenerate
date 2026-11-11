@@ -10,7 +10,10 @@ const BUILT = {
   questionBuilder: () => import('./modules/question-builder.js'),
   questionBank: () => import('./modules/question-bank.js'),
   examManager: () => import('./modules/exam-manager.js'),
-  paperGenerator: () => import('./modules/paper-generator.js')
+  paperGenerator: () => import('./modules/paper-generator.js'),
+  paperPreview: () => import('./modules/paper-preview.js'),
+  templates: () => import('./modules/templates.js'),
+  exports: () => import('./modules/exports.js')
 };
 let current = null, seq = 0;
 

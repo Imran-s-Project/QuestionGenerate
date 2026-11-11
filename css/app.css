@@ -96,3 +96,4 @@ summary{cursor:pointer;font-weight:600}
 .sec input[data-k=title]{flex:2;min-width:150px}
 .sec input[type=number],.pct{width:90px}
 .sec select{width:auto;max-width:200px}
+.sec input[data-k=instructions]{flex:1 1 100%}

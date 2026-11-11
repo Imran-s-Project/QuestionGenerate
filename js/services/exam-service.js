@@ -52,7 +52,7 @@ export async function saveExam(orgId, id, exam, sections, removed, clearSets) {
   const sc = sub(orgId, eRef.id, 'sections'), batch = fs.writeBatch(db);
   if (id) batch.update(eRef, forUpdate(body)); else batch.set(eRef, forCreate(orgId, body));
   sections.forEach((s, order) => {
-    const data = { title: s.title, type: s.type, count: s.count, marksEach: s.marksEach, order, questionIds: s.questionIds };
+    const data = { title: s.title, type: s.type, count: s.count, marksEach: s.marksEach, order, questionIds: s.questionIds, instructions: s.instructions || '' };
     if (s.id) batch.update(fs.doc(sc, s.id), forUpdate(data)); else batch.set(fs.doc(sc), forCreate(orgId, data));
   });
   removed.forEach(sid => batch.delete(fs.doc(sc, sid)));

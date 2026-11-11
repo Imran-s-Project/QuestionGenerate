@@ -27,7 +27,7 @@ async function list(root, org, canManage) {
   let items = [], cursor = null, status = 'draft';
   root.innerHTML = `<div class="card"><div class="row start"><select data-f="status" aria-label="${esc(t('x.status'))}">${['draft', 'final', 'archived'].map(s => `<option value="${s}">${t('status.' + s)}</option>`).join('')}</select>${canManage ? `<a class="btn primary" href="#/examManager/new">${t('x.new')}</a>` : ''}</div></div><div id="res" class="list"></div><div id="more" class="row"></div>`;
   const draw = () => {
-    root.querySelector('#res').innerHTML = items.length ? items.map(x => `<div class="item"><div><strong>${esc(x.title)}</strong><br><span class="badge">${esc(x.code || '—')}</span> <span class="badge">${esc(x.date || '—')}</span> <span class="badge">${t('x.sumQ')}: ${esc(x.questionCount ?? 0)}</span> <span class="badge">${t('x.totalMarks')}: ${esc(x.totalMarks)}</span></div>${canManage ? `<div class="row" data-id="${esc(x.id)}"><a class="btn sm" href="#/examManager/${esc(x.id)}">${t('bank.edit')}</a><a class="btn sm" href="#/paperGenerator/${esc(x.id)}">${t('nav.paperGenerator')}</a><button class="btn sm" data-act="${x.status === 'archived' ? 'restore' : 'archive'}">${t(x.status === 'archived' ? 'bank.restore' : 'bank.archive')}</button></div>` : ''}</div>`).join('') : `<p class="empty">${t('bank.empty')}</p>`;
+    root.querySelector('#res').innerHTML = items.length ? items.map(x => `<div class="item"><div><strong>${esc(x.title)}</strong><br><span class="badge">${esc(x.code || '—')}</span> <span class="badge">${esc(x.date || '—')}</span> <span class="badge">${t('x.sumQ')}: ${esc(x.questionCount ?? 0)}</span> <span class="badge">${t('x.totalMarks')}: ${esc(x.totalMarks)}</span></div>${canManage ? `<div class="row" data-id="${esc(x.id)}"><a class="btn sm" href="#/examManager/${esc(x.id)}">${t('bank.edit')}</a><a class="btn sm" href="#/paperGenerator/${esc(x.id)}">${t('nav.paperGenerator')}</a><a class="btn sm" href="#/paperPreview/${esc(x.id)}">${t('nav.paperPreview')}</a><button class="btn sm" data-act="${x.status === 'archived' ? 'restore' : 'archive'}">${t(x.status === 'archived' ? 'bank.restore' : 'bank.archive')}</button></div>` : ''}</div>`).join('') : `<p class="empty">${t('bank.empty')}</p>`;
     root.querySelector('#more').innerHTML = cursor ? `<button class="btn" data-act="more">${t('bank.more')}</button>` : '';
   };
   const load = async reset => {
@@ -64,7 +64,7 @@ async function editor(root, org, id) {
 <select data-k="type" aria-label="${esc(t('q.type'))}"><option value="">${esc(t('x.anyType'))}</option>${opts(types, s.type, typeName)}</select>
 <input data-k="count" type="number" min="0" step="1" value="${esc(s.count ?? 10)}" aria-label="${esc(t('x.count'))}" title="${esc(t('x.count'))}">
 <input data-k="marksEach" type="number" min="0" step="0.5" value="${esc(s.marksEach ?? 1)}" aria-label="${esc(t('x.marksEach'))}" title="${esc(t('x.marksEach'))}">
-<span class="badge" data-tot></span><button type="button" class="btn sm" data-act="delSec" aria-label="${esc(t('remove'))}">×</button></div>`;
+<input data-k="instructions" value="${esc(s.instructions || '')}" placeholder="${esc(t('x.secInstr'))}" aria-label="${esc(t('x.secInstr'))}"><span class="badge" data-tot></span><button type="button" class="btn sm" data-act="delSec" aria-label="${esc(t('remove'))}">×</button></div>`;
   const statuses = ['draft', 'final', ...(e0.status === 'archived' ? ['archived'] : [])];
 
   root.innerHTML = `<form class="card grid" id="ef"><h3>${t(id ? 'x.edit' : 'x.new')}</h3><div class="grid two">
@@ -86,7 +86,7 @@ ${FX('durationMin', 'number', e0.durationMin || '', ' min="0" step="1"')}${FX('t
     const f = root.querySelector('#ef').elements, v = n => f[n].value;
     const sections = [...root.querySelectorAll('.sec')].map(r => {
       const g = k => r.querySelector(`[data-k=${k}]`).value;
-      return { id: r.dataset.sid || null, title: g('title').trim(), type: g('type'), count: Number(g('count')) || 0, marksEach: Number(g('marksEach')) || 0, questionIds: r.dataset.q ? r.dataset.q.split(',') : [] };
+      return { id: r.dataset.sid || null, title: g('title').trim(), type: g('type'), count: Number(g('count')) || 0, marksEach: Number(g('marksEach')) || 0, questionIds: r.dataset.q ? r.dataset.q.split(',') : [], instructions: g('instructions').trim() };
     });
     const sum = sections.reduce((a, s) => a + sectionTotal(s), 0);
     const exam = { title: v('title').trim(), code: v('code').trim(), version: Number(v('version')) || 1, categoryId: v('categoryId'), examType: v('examType').trim(), session: v('session').trim(),
