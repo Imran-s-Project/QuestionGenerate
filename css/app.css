@@ -97,3 +97,10 @@ summary{cursor:pointer;font-weight:600}
 .sec input[type=number],.pct{width:90px}
 .sec select{width:auto;max-width:200px}
 .sec input[data-k=instructions]{flex:1 1 100%}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.stat{display:grid;gap:2px}
+.stat b{font-size:1.5rem}
+.stat span,.muted{color:var(--muted);font-size:.85rem}
+.bar{display:grid;grid-template-columns:minmax(70px,32%) 1fr auto;gap:8px;align-items:center;margin:4px 0}
+.bar i{display:block;height:10px;border-radius:5px;background:var(--brand);min-width:2px}
+.list>a{color:var(--brand)}

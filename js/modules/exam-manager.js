@@ -5,6 +5,7 @@ import { MANAGERS, listExams, getExam, saveExam, setExamStatus, listCategories, 
 import { t } from '../utilities/i18n.js';
 import { esc, toast } from '../utilities/dom.js';
 import { handleError } from '../utilities/errors.js';
+import { getSettings } from '../services/settings-service.js';
 
 let off = null;
 
@@ -55,6 +56,7 @@ async function editor(root, org, id) {
     [types, subjects, cats] = await Promise.all([loadTypes(org.id), listSubjects(org.id), listCategories(org.id)]);
     if (id) cur = await getExam(org.id, id);
   } catch (e) { handleError(e, 'exam'); root.innerHTML = ''; return; }
+  const st = await getSettings(org.id);
   const e0 = cur.exam, sections0 = cur.sections, removed = [];
   const sig = ss => JSON.stringify(ss.map(s => [s.id, s.type, s.count, s.marksEach]));
   const opts = (list, sel, label) => list.map(x => `<option value="${esc(x.id)}"${x.id === sel ? ' selected' : ''}>${esc(label(x))}</option>`).join('');
@@ -74,10 +76,10 @@ ${FX('title', 'text', e0.title, ' required maxlength="200"')}${FX('code', 'text'
 ${FX('examType', 'text', e0.examType)}${FX('session', 'text', e0.session ?? org.academicSession)}${FX('className', 'text', e0.className)}${FX('department', 'text', e0.department)}${FX('group', 'text', e0.group)}
 <label>${t('x.subjectId')}<select name="subjectId"><option value="">—</option>${opts(subjects, e0.subjectId, s => s.name)}</select></label>
 ${FX('version', 'number', e0.version ?? 1, ' min="1" step="1"')}${FX('date', 'date', e0.date)}${FX('startTime', 'time', e0.startTime)}${FX('endTime', 'time', e0.endTime)}
-${FX('durationMin', 'number', e0.durationMin || '', ' min="0" step="1"')}${FX('totalMarks', 'number', e0.totalMarks ?? '', ' min="0" step="0.5"')}${FX('passMarks', 'number', e0.passMarks ?? '', ' min="0" step="0.5"')}
+${FX('durationMin', 'number', e0.durationMin || (id ? '' : st.defaultDuration || ''), ' min="0" step="1"')}${FX('totalMarks', 'number', e0.totalMarks ?? '', ' min="0" step="0.5"')}${FX('passMarks', 'number', e0.passMarks ?? '', ' min="0" step="0.5"')}
 <label class="inline"><input type="checkbox" name="negativeMarking"${e0.negativeMarking ? ' checked' : ''}> ${t('x.negativeMarking')}</label>
 <label>${t('x.status')}<select name="status">${statuses.map(s => `<option value="${s}"${s === (e0.status || 'draft') ? ' selected' : ''}>${t('status.' + s)}</option>`).join('')}</select></label></div>
-<label>${t('x.instructions')}<textarea name="instructions" rows="3">${esc(e0.instructions || '')}</textarea></label>
+<label>${t('x.instructions')}<textarea name="instructions" rows="3">${esc(e0.instructions ?? (id ? '' : st.defaultInstructions))}</textarea></label>
 <h3>${t('x.sections')}</h3><div id="secs" class="list">${(sections0.length ? sections0 : [{ title: '', count: 10, marksEach: 1 }]).map(secRow).join('')}</div>
 <div class="row start"><button type="button" class="btn sm" data-act="addSec">${t('x.addSection')}</button></div>
 <div id="sum" class="card"></div><div class="row"><button class="btn primary">${t('x.save')}</button></div></form>`;

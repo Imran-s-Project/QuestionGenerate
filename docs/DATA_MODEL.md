@@ -76,3 +76,15 @@ A member with `answerKeyAccess: true` can read and write answer keys whatever th
 - Checks per row (same validator as the builder): statement, marks, difficulty, options, correct answer, blanks. Possible duplicates (same fingerprint inside the file or already in the bank) are flagged and unticked by default; nothing is deleted or overwritten. Statements can be corrected in the preview.
 - Saving: batches of 200 questions (with their answer keys). Cancel stops between batches. On a failed batch saving stops and the report shows what was saved and which rows were not. Subjects named in the file are reused by name or created.
 - Questions are always created as new documents, by the importing user, with fresh ids and timestamps.
+
+## Backup and restore (Phase 8, part 1)
+- Backup (owners and admins): one JSON file `question-generate/backup` (version 1) built in the browser: settings (subjects, categories, custom types, paper layouts, profile), the question bank (optionally with answer keys) and exams with sections and sets. Timestamps and ids of the source are not kept; subjects are stored by name. Nothing is uploaded.
+- Restore is additive: every document becomes a NEW document with a fresh id. Existing data is never deleted or overwritten (the institution profile only if you tick it). Subjects, categories and custom types are reused by name or created. Links are remapped: exam sections point to the new question ids, sets to the new sections and questions. If the question bank is not restored in the same run, exam sections lose their selections and sets are skipped.
+- Invalid questions are skipped and counted. Writes are batched (400 per batch); cancel stops between batches and a failed batch stops the restore, with a report of what was written. Restoring into the same institution creates copies, so it is best used for a new or damaged institution.
+- Planning is pure code in `js/utilities/backup-plan.js`; the Firestore writes are in `js/services/backup-service.js`.
+
+## Dashboard, reports, settings and drafts (Phase 8, part 2)
+- The dashboard shows real counts from server-side aggregation (questions and exams by status, active questions by type, difficulty and subject, questions and exams created per month). Results are cached for 5 minutes per institution; recent questions and exams are read as five documents each.
+- Reports: activity (`auditLogs`, owners and admins), exports and imports history (staff roles). Newest first, 30 per page; the activity list can be filtered by action (uses the `action` + `createdAt` index).
+- `settings/general`: default question type, difficulty, marks, negative marks, default exam duration and instructions, and the auto-save switch. Owners and admins can write; every member reads. Only settings the app applies are offered.
+- Question drafts are saved on the device (localStorage) every 5 seconds while editing and offered again if the page was closed before saving. They are removed after a successful save.

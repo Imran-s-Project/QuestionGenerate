@@ -16,8 +16,8 @@ Plain HTML, CSS and JavaScript (no framework, no build step) on Firebase Firesto
 | 5 | Exams, sections and marks, question selection, multiple sets | Done (core). Cross-exam repetition rules and presets come later. |
 | 6 | Paper designer, live page-by-page preview, print, layout templates | Done (core). Student paper only; teacher copy comes with Phase 7. |
 | 7 | Export Center and import (CSV, XLSX, JSON, paste) | Done (core). DOCX import and direct PDF files are not built. |
-| 8 | Auto-save, backup and restore, analytics, settings | Next |
-| 9 to 10 | Optimization, testing, final audit and user guide | Planned |
+| 8 | Backup and restore, dashboard analytics, activity history, settings, help, auto-save drafts | Done (core) |
+| 9 to 10 | Final documentation and checklists (done). Performance, device and browser testing | Yours to run: see docs/ACCEPTANCE.md |
 
 Menu items for unbuilt phases are marked "Phase N" and open an honest "planned" page.
 
@@ -37,6 +37,11 @@ Needs Node 18+ and Java 11+. Run `npm install`, then `npm run test:rules`, befor
 - Firestore document `appConfig/main` overrides branding, feature flags and the module list. Without it the defaults in `js/services/config-service.js` apply.
 - A document `platformAdmins/<your uid>` (create it in the console) lets that user edit `appConfig`. It gives no access to institution data.
 
+## Documentation
+- `docs/USER_GUIDE.md`: user guide in English and বাংলা (also the in-app Help page).
+- `docs/ACCEPTANCE.md`: the 20 acceptance checks, what is already verified and what you must test.
+- `docs/DATA_MODEL.md`: collections, fields, roles and permissions.
+
 ## Project structure
 ```
 question-generate/
@@ -47,22 +52,29 @@ question-generate/
 │   ├── app.css   Design system and responsive layout
 │   └── paper-preview.css   Paper pages and print styles
 ├── docs/
-│   └── DATA_MODEL.md   Collections, fields and the role matrix
+│   ├── ACCEPTANCE.md   Acceptance checklist
+│   ├── DATA_MODEL.md   Collections, fields and the role matrix
+│   └── USER_GUIDE.md   User guide (generated)
 ├── js/
 │   ├── modules/
+│   │   ├── backup.js   Backup and restore page
 │   │   ├── dashboard.js   Overview page
 │   │   ├── exam-manager.js   Exam setup, sections and marks
 │   │   ├── exports.js   Export Center
+│   │   ├── help.js   Help page
 │   │   ├── imports.js   Import wizard
 │   │   ├── institutions.js   Create, switch, join and edit institutions
 │   │   ├── paper-generator.js   Question selection and set generation
 │   │   ├── paper-preview.js   Live preview, layout designer, print
 │   │   ├── question-bank.js   Search, filter, archive, duplicate
 │   │   ├── question-builder.js   Question editor with rich text and answer key
+│   │   ├── reports.js   Activity, exports and imports history
+│   │   ├── settings.js   Institution settings page
 │   │   ├── templates.js   Paper layout templates
 │   │   └── users.js   Members, roles and invite codes
 │   ├── services/
 │   │   ├── auth-service.js   Sign-in, profile, preferences
+│   │   ├── backup-service.js   Backup reading and restore writing
 │   │   ├── config-service.js   Central configuration (Firestore, cache, defaults)
 │   │   ├── exam-service.js   Exams, sections, selection, sets
 │   │   ├── export-service.js   Export data: papers, answer keys, bank, archive
@@ -71,10 +83,15 @@ question-generate/
 │   │   ├── layout-service.js   Paper layouts: fields, defaults, storage
 │   │   ├── org-context.js   The active institution
 │   │   ├── question-service.js   Questions, answer keys, search, duplicates
-│   │   └── question-types.js   22 built-in types and custom types
+│   │   ├── question-types.js   22 built-in types and custom types
+│   │   ├── settings-service.js   Institution settings
+│   │   └── stats-service.js   Dashboard counts and history pages
 │   ├── utilities/
+│   │   ├── backup-plan.js   Pure restore planning and id remapping
 │   │   ├── dom.js   Escaping, toasts, confirm dialog
+│   │   ├── drafts.js   Local question drafts
 │   │   ├── errors.js   Central error messages
+│   │   ├── guide.js   User guide text (English and Bangla)
 │   │   ├── i18n.js   English and Bangla text engine
 │   │   ├── office.js   DOCX, XLSX, CSV, TXT builders and download
 │   │   ├── paper-render.js   Builds the paginated student paper
@@ -82,10 +99,12 @@ question-generate/
 │   │   ├── question-schema.js   Question schema, validation, row conversion
 │   │   ├── random.js   Shuffle helper
 │   │   ├── rich-text.js   Safe question markup renderer
+│   │   ├── strings-backup.js   Texts for backup and restore
 │   │   ├── strings-exams.js   Texts for exams and paper generation
 │   │   ├── strings-export.js   Texts for the Export Center
 │   │   ├── strings-import.js   Texts for the import
 │   │   ├── strings-institutions.js   Texts for institutions, members and invites
+│   │   ├── strings-misc.js   Texts for dashboard, reports, settings
 │   │   ├── strings-paper.js   Texts for the designer and the printed paper
 │   │   ├── strings-questions.js   Texts for the builder and bank
 │   │   └── zip.js   ZIP writer for DOCX and XLSX

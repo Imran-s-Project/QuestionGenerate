@@ -7,8 +7,10 @@ import { renderRich, plainText, wrapSelection } from '../utilities/rich-text.js'
 import { handleError } from '../utilities/errors.js';
 import { shuffle } from '../utilities/random.js';
 import { validateQuestion } from '../utilities/question-schema.js';
+import { getSettings } from '../services/settings-service.js';
+import { saveDraft, loadDraft, clearDraft } from '../utilities/drafts.js';
 
-let off = null;
+let off = null, autosaveTimer = null;
 const rid = () => 'o' + Math.random().toString(36).slice(2, 7);
 const TOOLS = [['B', '**', '**'], ['I', '*', '*'], ['U', '++', '++'], ['x²', '^(', ')'], ['x₂', '_(', ')'], ['½', '{', '/}'], ['•', '\n- ', ''], ['▦', '\n| a | b |\n| c | d |\n', '']];
 const SYMBOLS = '² ³ √ π ∑ ∫ ∞ ≤ ≥ ≠ ± × ÷ ° ∠ ∴ ∵ → ½ ¼ ¾ α β θ λ μ Δ Ω'.split(' ');
@@ -70,8 +72,12 @@ export async function mount(el, param) {
     [types, subjects] = await Promise.all([loadTypes(org.id), listSubjects(org.id)]);
     if (param) cur = await getQuestion(org.id, param);
   } catch (e) { handleError(e, 'builder'); root.innerHTML = ''; return; }
+  const st = await getSettings(org.id);
+  const draft = st.autosave ? loadDraft(org.id, param) : null;
+  if (draft?.data?.q && await confirmBox(t('d.restore', { time: new Date(draft.at).toLocaleString() }))) cur = { q: draft.data.q, ak: draft.data.ak || {} };
+  else if (draft) clearDraft(org.id, param);
   const { q: q0, ak: ak0 } = cur;
-  const tp0 = types.find(x => x.id === q0.type) || (q0.family ? { id: q0.type, family: q0.family, name: q0.type } : types[0]);
+  const tp0 = types.find(x => x.id === q0.type) || (q0.family ? { id: q0.type, family: q0.family, name: q0.type } : types.find(x => x.id === st.defaultType) || types[0]);
   const subjectOpts = sel => '<option value="">—</option>' + subjects.map(s => `<option value="${esc(s.id)}"${s.id === sel ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
   const tp = () => types.find(x => x.id === root.querySelector('[name=type]').value) || tp0;
   const statuses = ['draft', 'active', ...(q0.status === 'archived' ? ['archived'] : [])];
@@ -87,8 +93,8 @@ ${F('imageUrl', 'url', q0.imageUrl, ' pattern="https?://.*"')}${TA('instructions
 <label>${t('q.subject')}<select name="subjectId">${subjectOpts(q0.subjectId)}</select></label>
 <label>${t('q.newSubject')}<span class="row start"><input id="newSubject"><button type="button" class="btn sm" data-act="addSubject">+</button></span></label>
 ${F('topic', 'text', q0.topic)}${F('chapter', 'text', q0.chapter)}${F('category', 'text', q0.category)}
-${S('difficulty', ['easy', 'medium', 'hard'].map(d => [d, t('diff.' + d)]), q0.difficulty || 'medium')}
-${F('marks', 'number', q0.marks ?? 1, ' min="0" step="0.5" required')}${F('negativeMarks', 'number', q0.negativeMarks ?? 0, ' min="0" step="0.25"')}${F('timeSeconds', 'number', q0.timeSeconds || '', ' min="0"')}
+${S('difficulty', ['easy', 'medium', 'hard'].map(d => [d, t('diff.' + d)]), q0.difficulty || st.defaultDifficulty)}
+${F('marks', 'number', q0.marks ?? st.defaultMarks, ' min="0" step="0.5" required')}${F('negativeMarks', 'number', q0.negativeMarks ?? st.defaultNegative, ' min="0" step="0.25"')}${F('timeSeconds', 'number', q0.timeSeconds || '', ' min="0"')}
 ${F('tags', 'text', (q0.tags || []).join(', '))}${S('status', statuses.map(s => [s, t('status.' + s)]), q0.status || 'active')}
 </div>
 ${TA('explanation', ak0.explanation, 3)}${TA('notes', ak0.notes)}
@@ -164,11 +170,19 @@ ${TA('explanation', ak0.explanation, 3)}${TA('notes', ak0.notes)}
       const dup = await findDuplicate(org.id, await fingerprint(q), param);
       if (dup && !(await confirmBox(t('q.dup', { text: plainText(dup.statement).slice(0, 80) })))) return;
       await saveQuestion(org.id, param, q, ak);
+      clearDraft(org.id, param);
       toast(t('saved')); // only after the write succeeded
       location.hash = '#/questionBank';
     } catch (err) { handleError(err, 'builder'); }
     finally { form.classList.remove('busy'); }
   });
   off = onOrgChange(() => { location.hash = '#/questionBank'; });
+  clearInterval(autosaveTimer);
+  let dirty = false;
+  root.addEventListener('input', () => { dirty = true; });
+  autosaveTimer = setInterval(() => { // draft on this device every 5 seconds while editing
+    if (!dirty || !st.autosave) return;
+    try { const { q, ak } = collect(tp()); saveDraft(org.id, param, { q, ak }); dirty = false; } catch (e) { console.warn('Draft not saved', e); }
+  }, 5000);
 }
-export function unmount() { off?.(); }
+export function unmount() { off?.(); clearInterval(autosaveTimer); }

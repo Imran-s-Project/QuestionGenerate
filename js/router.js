@@ -14,7 +14,11 @@ const BUILT = {
   paperPreview: () => import('./modules/paper-preview.js'),
   templates: () => import('./modules/templates.js'),
   exports: () => import('./modules/exports.js'),
-  imports: () => import('./modules/imports.js')
+  imports: () => import('./modules/imports.js'),
+  backup: () => import('./modules/backup.js'),
+  reports: () => import('./modules/reports.js'),
+  settings: () => import('./modules/settings.js'),
+  help: () => import('./modules/help.js')
 };
 let current = null, seq = 0;
 
