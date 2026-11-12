@@ -1,0 +1,229 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function signedIn() { return request.auth != null; }
+    function memberExists(orgId) { return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)); }
+    function memberData(orgId) { return get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data; }
+    function isActiveMember(orgId) { return signedIn() && memberExists(orgId) && memberData(orgId).status == 'active'; }
+    function hasRole(orgId, roles) { return isActiveMember(orgId) && memberData(orgId).role in roles; }
+    function isAdmin(orgId) { return hasRole(orgId, ['owner', 'admin']); }
+    function isStaff(orgId) { return hasRole(orgId, ['owner', 'admin', 'teacher', 'editor', 'examManager']); }
+    function canWriteQuestions(orgId) { return hasRole(orgId, ['owner', 'admin', 'teacher', 'editor']); }
+    function canManageExams(orgId) { return hasRole(orgId, ['owner', 'admin', 'examManager', 'teacher']); }
+    function canManageTemplates(orgId) { return hasRole(orgId, ['owner', 'admin', 'examManager']); }
+    // Per-member flag set by owners/admins: an "authorized answer-key manager" regardless of role.
+    function hasKeyAccess(orgId) { return isActiveMember(orgId) && memberData(orgId).get('answerKeyAccess', false) == true; }
+    function canReadAnswerKey(orgId) { return hasRole(orgId, ['owner', 'admin', 'teacher', 'editor', 'reviewer', 'examManager']) || hasKeyAccess(orgId); }
+    function canWriteAnswerKey(orgId) { return canWriteQuestions(orgId) || hasKeyAccess(orgId); }
+    function isPlatformAdmin() { return signedIn() && exists(/databases/$(database)/documents/platformAdmins/$(request.auth.uid)); }
+
+    // Ownership and server timestamps are mandatory on every write and can never be forged or rewritten.
+    function created(orgId) {
+      let d = request.resource.data;
+      return d.orgId == orgId && d.createdBy == request.auth.uid && d.createdAt == request.time
+        && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+    }
+    function updated(orgId) {
+      let d = request.resource.data;
+      return d.orgId == orgId && d.createdBy == resource.data.createdBy && d.createdAt == resource.data.createdAt
+        && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+    }
+
+    // Institution profile checks. The logo is an external https URL only, never inline data.
+    function validProfile() {
+      let d = request.resource.data;
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && d.type in ['school', 'college', 'university', 'madrasa', 'coachingCenter', 'trainingInstitute', 'recruitmentOrganization', 'examinationCenter', 'custom']
+        && (!('logoUrl' in d) || (d.logoUrl is string && d.logoUrl.size() <= 500 && (d.logoUrl == '' || d.logoUrl.matches('https?://.*'))));
+    }
+    function invite(orgId, id) { return get(/databases/$(database)/documents/organizations/$(orgId)/invites/$(id)).data; }
+    function inviteAfter(orgId, id) { return getAfter(/databases/$(database)/documents/organizations/$(orgId)/invites/$(id)).data; }
+    // A newcomer creates their own member doc while marking one pending, unexpired invite as used (same batch).
+    function redeemsInvite(orgId, uid) {
+      let d = request.resource.data;
+      return uid == request.auth.uid && d.status == 'active' && d.inviteId is string
+        && invite(orgId, d.inviteId).status == 'pending' && request.time < invite(orgId, d.inviteId).expiresAt
+        && invite(orgId, d.inviteId).role == d.role
+        && invite(orgId, d.inviteId).get('answerKeyAccess', false) == d.get('answerKeyAccess', false)
+        && inviteAfter(orgId, d.inviteId).status == 'used' && inviteAfter(orgId, d.inviteId).usedBy == request.auth.uid;
+    }
+
+    // Field checks for questions. Images are external https URLs only, never inline data.
+    function validQuestion() {
+      let d = request.resource.data;
+      return d.statement is string && d.statement.size() > 0 && d.statement.size() <= 20000
+        && d.marks is number && d.marks >= 0 && d.marks <= 1000
+        && d.difficulty in ['easy', 'medium', 'hard']
+        && d.status in ['draft', 'active', 'archived']
+        && (!('imageUrl' in d) || d.imageUrl == '' || d.imageUrl.matches('https?://.*'))
+        && (!('tags' in d) || (d.tags is list && d.tags.size() <= 30));
+    }
+
+    // Field checks for exams: title, status and a pass mark that never exceeds the total.
+    function validExam() {
+      let d = request.resource.data;
+      return d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && d.status in ['draft', 'final', 'archived']
+        && d.totalMarks is number && d.totalMarks >= 0 && d.passMarks is number && d.passMarks >= 0 && d.passMarks <= d.totalMarks;
+    }
+
+    // Simple organization-level collections, grouped by who may touch them.
+    function canReadCol(orgId, col) {
+      return (col in ['subjects', 'departments', 'classes', 'categories', 'questionTypes', 'questionCollections', 'settings', 'templates', 'paperLayouts'] && isActiveMember(orgId))
+        || (col in ['imports', 'exports'] && isStaff(orgId))
+        || (col == 'archives' && isAdmin(orgId));
+    }
+    function canWriteCol(orgId, col) {
+      return (col in ['subjects', 'departments', 'classes', 'categories', 'questionTypes', 'questionCollections'] && canWriteQuestions(orgId))
+        || (col == 'categories' && canManageExams(orgId))
+        || (col in ['templates', 'paperLayouts'] && canManageTemplates(orgId))
+        || (col == 'settings' && isAdmin(orgId))
+        || (col in ['imports', 'exports'] && isStaff(orgId))
+        || (col == 'archives' && isAdmin(orgId));
+    }
+
+    // ---------- Organizations ----------
+    match /organizations/{orgId} {
+      allow read: if isActiveMember(orgId);
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time
+        && validProfile()
+        && request.resource.data.status == 'active';
+      allow update: if isAdmin(orgId)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.createdBy == resource.data.createdBy && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time
+        && validProfile()
+        && request.resource.data.status in ['active', 'archived'];
+      allow delete: if false; // archived via status, never hard-deleted from the client
+
+      match /members/{uid} {
+        function valid() {
+          let d = request.resource.data;
+          return signedIn()
+            && d.keys().hasOnly(['uid', 'role', 'status', 'answerKeyAccess', 'email', 'displayName', 'inviteId', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt'])
+            && d.keys().hasAll(['uid', 'role', 'status', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt'])
+            && d.uid == uid
+            && d.role in ['owner', 'admin', 'teacher', 'editor', 'reviewer', 'examManager', 'viewer']
+            && d.status in ['active', 'invited', 'disabled']
+            && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+        }
+        allow read: if signedIn() && (request.auth.uid == uid || isActiveMember(orgId));
+        allow create: if valid()
+          && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time
+          && (
+            // Bootstrap: the organization creator becomes owner, in the same batch that creates the organization.
+            (uid == request.auth.uid && request.resource.data.role == 'owner' && request.resource.data.status == 'active'
+              && !exists(/databases/$(database)/documents/organizations/$(orgId))
+              && getAfter(/databases/$(database)/documents/organizations/$(orgId)).data.ownerUid == request.auth.uid)
+            // Later: owners add any non-owner role; admins add non-admin roles.
+            || (request.resource.data.role != 'owner'
+              && (hasRole(orgId, ['owner']) || (hasRole(orgId, ['admin']) && request.resource.data.role != 'admin')))
+            // Invite: the invitee creates their own member doc while redeeming a code.
+            || redeemsInvite(orgId, uid)
+          );
+        allow update: if valid()
+          && request.resource.data.createdBy == resource.data.createdBy && request.resource.data.createdAt == resource.data.createdAt
+          && resource.data.role != 'owner' && request.resource.data.role != 'owner'
+          && (hasRole(orgId, ['owner']) || (hasRole(orgId, ['admin']) && resource.data.role != 'admin' && request.resource.data.role != 'admin'));
+        allow delete: if signedIn() && resource.data.role != 'owner'
+          && (uid == request.auth.uid || hasRole(orgId, ['owner']) || (hasRole(orgId, ['admin']) && resource.data.role != 'admin'));
+      }
+
+      match /questions/{questionId} {
+        allow read: if isActiveMember(orgId);
+        allow create: if canWriteQuestions(orgId) && created(orgId) && validQuestion();
+        allow update: if canWriteQuestions(orgId) && updated(orgId) && validQuestion();
+        allow delete: if isAdmin(orgId);
+
+        // Answer keys are kept apart so student-facing reads of a question never include them.
+        match /answerKey/{answerId} {
+          allow read: if canReadAnswerKey(orgId);
+          allow create: if canWriteAnswerKey(orgId) && created(orgId) && request.resource.data.questionId == questionId;
+          allow update: if canWriteAnswerKey(orgId) && updated(orgId) && request.resource.data.questionId == questionId;
+          allow delete: if canWriteAnswerKey(orgId);
+        }
+      }
+
+      // Invite codes: the unguessable id is the secret. Anyone signed in can fetch one by id; only admins list, create or revoke.
+      match /invites/{inviteId} {
+        allow get: if signedIn();
+        allow list: if isAdmin(orgId);
+        allow create: if created(orgId) && request.resource.data.status == 'pending'
+          && request.resource.data.role in ['admin', 'teacher', 'editor', 'reviewer', 'examManager', 'viewer']
+          && request.resource.data.expiresAt is timestamp && request.resource.data.expiresAt > request.time
+          && request.resource.data.expiresAt < request.time + duration.value(8, 'd')
+          && (hasRole(orgId, ['owner']) || (hasRole(orgId, ['admin']) && request.resource.data.role != 'admin'));
+        // Redeeming: pending -> used, by the person redeeming, before expiry.
+        allow update: if signedIn() && resource.data.status == 'pending' && request.time < resource.data.expiresAt
+          && request.resource.data.status == 'used' && request.resource.data.usedBy == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'usedBy', 'usedAt']);
+        allow delete: if isAdmin(orgId);
+      }
+
+      match /exams/{examId} {
+        allow read: if isActiveMember(orgId);
+        allow create: if canManageExams(orgId) && created(orgId) && validExam();
+        allow update: if canManageExams(orgId) && updated(orgId) && validExam();
+        allow delete: if isAdmin(orgId);
+
+        match /{sub}/{subId} {
+          allow read: if sub in ['sections', 'sets', 'selections'] && isActiveMember(orgId);
+          allow create: if sub in ['sections', 'sets', 'selections'] && canManageExams(orgId) && created(orgId);
+          allow update: if sub in ['sections', 'sets', 'selections'] && canManageExams(orgId) && updated(orgId);
+          allow delete: if sub in ['sections', 'sets', 'selections'] && canManageExams(orgId);
+        }
+      }
+
+      // Append-only: members add entries, only admins read, nobody edits or deletes.
+      match /auditLogs/{logId} {
+        allow read: if isAdmin(orgId);
+        allow create: if isActiveMember(orgId) && request.resource.data.orgId == orgId
+          && request.resource.data.actorUid == request.auth.uid && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+
+      match /{col}/{docId} {
+        allow read: if canReadCol(orgId, col);
+        allow create: if canWriteCol(orgId, col) && created(orgId);
+        allow update: if canWriteCol(orgId, col) && updated(orgId);
+        allow delete: if canReadCol(orgId, col) && isAdmin(orgId);
+      }
+    }
+
+    // "Which organizations am I in?" = collection-group query on members.uid, limited to the caller's own docs.
+    match /{path=**}/members/{memberId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ---------- Users, platform ----------
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'createdAt', 'updatedAt']);
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'updatedAt']);
+      match /preferences/{prefId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // Platform admins manage public app configuration only. They get no access to organization data.
+    match /platformAdmins/{adminUid} {
+      allow read: if signedIn() && request.auth.uid == adminUid;
+      allow write: if false; // create these marker docs in the Firebase Console
+    }
+    match /appConfig/{document=**} {
+      allow read: if true;
+      allow write: if isPlatformAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
